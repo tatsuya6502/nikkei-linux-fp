@@ -1,6 +1,6 @@
-.eunit
-deps
-priv
+*~
+.DS_Store
 *.o
 *.beam
+*.hi
 *.plt
