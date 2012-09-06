@@ -260,12 +260,12 @@ start_workers(Seed, Prefixes, Self, Ref, []) ->
     map(fun(Prefix) -> spawn_link(?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix]) end, % ← (1)
         Prefixes);
 start_workers(Seed, Prefixes, Self, Ref, Nodes) ->
-    {_, Pids} = foldl(fun(Prefix, {I, Ps}) ->
-                              Node = lists:nth(I rem length(Nodes) + 1, Nodes),
-                              Pid = spawn_link(Node, ?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix]),
-                              {I + 1, [Pid | Ps]}
-                      end, {1, []}, Prefixes),
-    reverse(Pids).
+    NumNodes = length(Nodes),
+    NumberedPrefixes = zip(seq(1, length(Prefixes)), Prefixes),
+    map(fun({I, Prefix}) ->
+                Node = lists:nth(I rem NumNodes + 1, Nodes),
+                spawn_link(Node, ?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix])
+        end, NumberedPrefixes).
 ```
 
 　`start_worker`関数は2種類定義されています。1つ目は1台のコンピュータで実行する時のもの、2つ目は複数のコンピュータで実行する時のものです。

@@ -20,7 +20,7 @@
 -compile([native, {hipe, ['O3']}]).  %% 高速化のためにネイティブコードにコンパイル
 
 -export([queens/1, queens/2, run_queens/4]).
--import(lists, [foldl/3, map/2, reverse/1, seq/2, zip/2]).
+-import(lists, [foldl/3, map/2, seq/2, zip/2]).
 
 
 %%%
@@ -67,12 +67,12 @@ start_workers(Seed, Prefixes, Self, Ref, []) ->
     map(fun(Prefix) -> spawn_link(?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix]) end,
 	Prefixes);
 start_workers(Seed, Prefixes, Self, Ref, Nodes) ->
-    {_, Pids} = foldl(fun(Prefix, {I, Ps}) ->
-			      Node = lists:nth(I rem length(Nodes) + 1, Nodes),
-			      Pid = spawn_link(Node, ?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix]),
-			      {I + 1, [Pid | Ps]}
-		      end, {1, []}, Prefixes),
-    reverse(Pids).
+    NumNodes = length(Nodes),
+    NumberedPrefixes = zip(seq(1, length(Prefixes)), Prefixes),
+    map(fun({I, Prefix}) ->
+                Node = lists:nth(I rem NumNodes + 1, Nodes),
+                spawn_link(Node, ?MODULE, run_queens, [Self, Ref, Prefix, Seed -- Prefix])
+        end, NumberedPrefixes).
 
 %% @doc run_queens関数はワーカープロセスにより実行され、指定された範囲の駒の配置について解を求めます。
 -spec run_queens(pid(), reference(), [integer()], [integer()]) -> {pid(), reference(), [cols()]}.
